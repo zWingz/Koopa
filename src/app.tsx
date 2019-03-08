@@ -2,12 +2,12 @@ import Taro, { Component, Config } from '@tarojs/taro'
 import { Provider } from '@tarojs/mobx'
 import Index from './pages/index'
 
-import counterStore from './store/counter'
+import ConfigStore from './store/config'
 
 import './app.less'
 
 const store = {
-  counterStore
+  ConfigStore
 }
 
 class App extends Component {
