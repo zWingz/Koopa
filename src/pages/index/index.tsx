@@ -1,7 +1,8 @@
 import { ComponentType } from 'react'
-import Taro, { Component, Config } from '@tarojs/taro'
-import { View, Button, Text } from '@tarojs/components'
+import Taro, { Component, Config, chooseImage } from '@tarojs/taro'
+import { View, Button, Text, Image } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
+import { getIns, Octo } from '../../utils/octokit'
 
 import './index.less'
 
@@ -32,14 +33,32 @@ class Index extends Component {
   config: Config = {
     navigationBarTitleText: '首页'
   }
-
+  state = {
+    path: []
+  }
+  octo: Octo = null
+  // chooseImage = () => {
+  //   chooseImage().then(r => {
+  //     this.readFile(r.tempFilePaths[0])
+  //   })
+  // }
+  // readFile = (filePath) => {
+  //   console.log(filePath);
+  //   wx.getFileSystemManager().readFile({
+  //     filePath,
+  //     encoding: 'base64',
+  //     success: (r) => {
+  //       console.log('read success');
+  //     }
+  //   })
+  // }
   componentWillMount () { }
 
   componentWillReact () {
-    console.log('componentWillReact')
   }
 
-  componentDidMount () { }
+  componentDidMount () {
+  }
 
   componentWillUnmount () { }
 
@@ -48,10 +67,10 @@ class Index extends Component {
   componentDidHide () { }
 
   render () {
-    const { counterStore: { counter } } = this.props
+    // console.log();
     return (
       <View className='index'>
-        <Text>{counter}</Text>
+        {/* <Button onClick={this.chooseImage}>choose image</Button> */}
       </View>
     )
   }

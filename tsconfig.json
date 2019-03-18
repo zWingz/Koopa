@@ -11,7 +11,7 @@
     "outDir": "lib",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "strictNullChecks": true,
+    // "strictNullChecks": true,
     "sourceMap": true,
     "baseUrl": ".",
     "rootDir": ".",

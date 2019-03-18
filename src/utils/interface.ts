@@ -1,8 +1,11 @@
-export interface Config {
+export interface RestConfig {
   repo: string,
   branch?: string,
-  path?: string,
   token: string,
+}
+
+
+export interface Config extends RestConfig {
   customUrl?: string
 }
 
