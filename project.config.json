@@ -1,13 +1,42 @@
 {
-  "miniprogramRoot": "./dist",
-  "projectname": "rescue zelda",
-  "description": "小程序图片库",
-  "appid": "wx8a6415783a72f1f4",
-  "setting": {
-    "urlCheck": true,
-    "es6": false,
-    "postcss": false,
-    "minified": false
-  },
-  "compileType": "miniprogram"
+	"projectname": "rescue zelda",
+	"description": "小程序图片库",
+	"appid": "wx8a6415783a72f1f4",
+	"setting": {
+		"urlCheck": false,
+		"es6": false,
+		"postcss": false,
+		"minified": false,
+		"newFeature": true,
+		"autoAudits": false
+	},
+	"compileType": "miniprogram",
+	"condition": {
+		"search": {
+			"current": -1,
+			"list": []
+		},
+		"conversation": {
+			"current": -1,
+			"list": []
+		},
+		"plugin": {
+			"current": -1,
+			"list": []
+		},
+		"game": {
+			"list": []
+		},
+		"miniprogram": {
+			"current": 0,
+			"list": [
+				{
+					"id": -1,
+					"name": "设置",
+					"pathName": "pages/config/index",
+					"scene": null
+				}
+			]
+		}
+	}
 }

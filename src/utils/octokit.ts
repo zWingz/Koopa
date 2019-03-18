@@ -108,6 +108,9 @@ export class Octo {
       sha: img.sha
     })
   }
+  getUser() {
+    return this.octokit.getUser()
+  }
   parseUrl(fileName) {
     const { owner, repo, path, customUrl, branch } = this
     if (customUrl) {

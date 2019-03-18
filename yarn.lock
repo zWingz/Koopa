@@ -302,6 +302,13 @@
   dependencies:
     less "^3.0.4"
 
+"@tarojs/plugin-sass@^1.2.20":
+  version "1.2.20"
+  resolved "https://registry.yarnpkg.com/@tarojs/plugin-sass/-/plugin-sass-1.2.20.tgz#2fd5f3c68290861f7c0c89db864f57da323b6539"
+  integrity sha512-sFQYwn6v8j4fDakT3810yeY+IK3oDHMtfbl4cIN39p54KWYZmJsikFKFDJompZ6/tCa9PMA0nVgqYwS4C0Z9KA==
+  dependencies:
+    node-sass "^4.11.0"
+
 "@tarojs/plugin-uglifyjs@1.2.16":
   version "1.2.16"
   resolved "https://registry.yarnpkg.com/@tarojs/plugin-uglifyjs/-/plugin-uglifyjs-1.2.16.tgz#7f7b8590a8490a17b9acbd5167e73b687fe8357c"
@@ -5915,7 +5922,7 @@ node-pre-gyp@^0.10.0:
     semver "^5.3.0"
     tar "^4"
 
-node-sass@4.11.0:
+node-sass@4.11.0, node-sass@^4.11.0:
   version "4.11.0"
   resolved "https://registry.yarnpkg.com/node-sass/-/node-sass-4.11.0.tgz#183faec398e9cbe93ba43362e2768ca988a6369a"
   integrity sha512-bHUdHTphgQJZaF1LASx0kAviPH7sGlcyNhWade4eVIpFp6tsn7SV8xNMTbsQFpEV9VXpnwTTnNYlfsZXgGgmkA==

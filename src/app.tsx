@@ -1,9 +1,12 @@
-import Taro, { Component, Config } from '@tarojs/taro'
+import Taro, { Component, Config, getStorageSync } from '@tarojs/taro'
 import '@tarojs/async-await'
 import { Provider } from '@tarojs/mobx'
 import Index from './pages/index'
 import ConfigStore from './store/config'
-
+import "taro-ui/dist/style/components/input.scss";
+import "taro-ui/dist/style/components/icon.scss";
+import "taro-ui/dist/style/components/button.scss";
+import "taro-ui/dist/style/components/loading.scss";
 import './app.less'
 
 const store = {
@@ -21,14 +24,38 @@ class App extends Component {
    */
   config: Config = {
     pages: [
-      'pages/index/index'
+      'pages/index/index',
+      'pages/config/index'
     ],
+    tabBar: {
+      selectedColor: '#d4237a',
+      list: [{
+        pagePath: 'pages/index/index',
+        text: '首页',
+        iconPath: 'image/导航-首页.png',
+        selectedIconPath: 'image/导航-首页-ac.png'
+      }, {
+        pagePath: 'pages/config/index',
+        text: '设置',
+        iconPath: 'image/设置.png',
+        selectedIconPath: 'image/设置-ac.png'
+      }]
+    },
     window: {
       backgroundTextStyle: 'light',
       navigationBarBackgroundColor: '#fff',
       navigationBarTitleText: 'WeChat',
       navigationBarTextStyle: 'black'
     }
+  }
+
+  constructor() {
+    super()
+    const config = getStorageSync('config')
+    if(config) {
+      ConfigStore.setConfig(config)
+    }
+
   }
 
   componentDidMount () {}

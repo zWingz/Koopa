@@ -12,12 +12,11 @@ class Rest {
   headers = {
     Authorization: ''
   }
-  constructor({ repo, token, path, branch }: RestConfig) {
+  constructor({ repo, token, branch }: RestConfig) {
     this.repo = repo
     this.headers = {
       Authorization: `token ${token}`
     }
-    this.path = path
     this.branch = branch
   }
   request({
@@ -40,6 +39,16 @@ class Rest {
   }
   test() {
     return this.request()
+  }
+  getUser() {
+    const url = 'user'
+    return this.request({ url }).then(d => {
+      const { login: username, avatar_url: avatar } = d
+      return {
+        username,
+        avatar
+      }
+    })
   }
   getTree(sha: string): Promise<{ path: string; sha: string }[]> {
     const url = `/repos/${this.repo}/git/trees/${sha}`
