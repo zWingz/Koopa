@@ -11,7 +11,7 @@ import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
 import { AtButton, AtIcon, AtActivityIndicator } from 'taro-ui'
 import { readFile } from '../../utils/wx';
-
+import LoadImage from '../../components/Image'
 type Props = {
   ConfigStore: typeof ConfigStore
 }
@@ -191,12 +191,13 @@ class Index extends Component<Props, State> {
           <View className="image-inner">
             {images.map(each => (
               <View key={each.sha} className='image-wrapper'>
-                <Image
+                <LoadImage sha={each.sha}></LoadImage>
+                {/* <Image
                   lazyLoad
                   className='image-item'
                   mode='aspectFill'
                   src={each.imgUrl}
-                />
+                /> */}
               </View>
             ))}
           </View>
