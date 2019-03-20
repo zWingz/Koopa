@@ -3,6 +3,11 @@ import join from 'url-join'
 import { RestConfig } from './interface'
 
 type Methdos = 'GET' | 'POST' | 'PUT' | 'DELETE'
+type FileResponseType = {
+  name: string
+  sha: string
+  path: string
+}
 
 class Rest {
   repo = ''
@@ -73,7 +78,7 @@ class Rest {
     path: string
     content: string
     message: string
-  }) {
+  }): Promise<FileResponseType> {
     const url = `/repos/${this.repo}/contents/${path}`
     return this.request({
       url,
@@ -81,6 +86,15 @@ class Rest {
       data: {
         content,
         message
+      }
+    }).then(r => {
+      const {
+        content: { name, path, sha }
+      } = r
+      return {
+        name,
+        path,
+        sha
       }
     })
   }
@@ -94,7 +108,7 @@ class Rest {
     content: string
     message: string
     sha: string
-  }) {
+  }): Promise<FileResponseType> {
     const url = `/repos/${this.repo}/contents/${path}`
     return this.request({
       url,
@@ -102,6 +116,15 @@ class Rest {
       data: {
         content,
         message,
+        sha
+      }
+    }).then(r => {
+      const {
+        content: { name, path, sha }
+      } = r
+      return {
+        name,
+        path,
         sha
       }
     })

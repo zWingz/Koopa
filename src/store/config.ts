@@ -1,13 +1,8 @@
 import { observable, action, computed } from 'mobx'
+import { Config } from 'src/utils/interface';
 
-interface ConfigKey {
-  token: string
-  repo: string
-  customUrl: string
-  branch: string
-}
 
-class Config {
+class ConfigStore {
   @observable
   token:string = ''
 
@@ -29,13 +24,13 @@ class Config {
   }
 
   @action
-  setConfig(config: {[t in keyof ConfigKey]?: string}) {
-    Object.keys(config).forEach((each: keyof ConfigKey) => {
+  setConfig(config: {[t in keyof Config]?: string}) {
+    Object.keys(config).forEach((each: keyof Config) => {
       this.setKey(each, config[each])
     })
   }
 
-  private setKey(key: keyof ConfigKey, value) {
+  private setKey(key: keyof Config, value) {
     this[key] = value
   }
   @computed
@@ -44,4 +39,4 @@ class Config {
   }
 }
 
-export default new Config()
+export default new ConfigStore()

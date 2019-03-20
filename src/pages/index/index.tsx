@@ -1,13 +1,15 @@
 import { ComponentType } from 'react'
 import Taro, { Component, Config, chooseImage } from '@tarojs/taro'
-import { View, Button, Text, Image } from '@tarojs/components'
-import { observer, inject, autorun } from '@tarojs/mobx'
-import { getIns, Octo } from '../../utils/octokit'
+import { View, Image } from '@tarojs/components'
+import { observer, inject } from '@tarojs/mobx'
+import { getIns, Octo, clearIns } from '../../utils/octokit'
 import join from 'url-join'
 import './index.less'
 import { ImgZipType, ImgType } from 'src/utils/interface'
 import { unzip } from '../../utils/helper'
 import ConfigStore from '../../store/config'
+import { autorun } from 'mobx'
+import { AtButton, AtIcon, AtActivityIndicator } from 'taro-ui'
 
 type Props = {
   ConfigStore: typeof ConfigStore
@@ -22,7 +24,12 @@ type State = {
     username: string
     avatar: string
   }
+  loading: boolean
+  hasDataJson: boolean
+  error: string
 }
+
+const CONFIG_ERROR_MSG = '配置不正确，请修改后重试'
 
 @inject('ConfigStore')
 @observer
@@ -42,14 +49,12 @@ class Index extends Component<Props, State> {
     images: [],
     sha: '',
     lastSync: '',
-    user: null
+    user: null,
+    error: ConfigStore.valid ? '' : CONFIG_ERROR_MSG,
+    loading: true,
+    hasDataJson: false
   }
   octo: Octo = null
-  constructor(p: Props) {
-    super(p)
-    const { ConfigStore } = p
-    this.octo = ConfigStore.valid ? getIns(p.ConfigStore) : null
-  }
   get path() {
     const { path } = this.state
     if (!path.length) return ''
@@ -59,27 +64,67 @@ class Index extends Component<Props, State> {
   parse(img: ImgZipType) {
     return {
       ...unzip(img),
-      imgUrl: this.octo.parseUrl(img.f)
+      imgUrl: this.octo.parseUrl(this.path, img.f)
     }
   }
+  initOcto() {
+    if (!ConfigStore.valid) {
+      this.octo = null
+      this.setState({
+        error: CONFIG_ERROR_MSG
+      })
+      return
+    } else {
+      this.setState({
+        path: [],
+        images: [],
+        user: null,
+        error: ''
+      })
+      clearIns()
+    }
+    this.octo = getIns(ConfigStore)
+    this.getData()
+  }
+
   async getData() {
-    if(this.octo) {
+    if (this.octo) {
       await this.getUser()
       await this.getImage()
     }
   }
   async getImage() {
-    const { sha, data, lastSync } = await this.octo.getDataJson(this.path)
-    this.setState({
-      sha,
-      images: data.map(each => this.parse(each as ImgZipType)),
-      lastSync
-    })
+    if (!this.state.loading) {
+      this.setState({ loading: true })
+    }
+    try {
+      const { sha, data } = await this.octo.getDataJson(this.path)
+      this.setState({
+        sha,
+        images: data.map(each => this.parse(each as ImgZipType)),
+        // loading: false
+      })
+    } catch (e) {
+      this.setState({
+        error: 'e.message'
+      })
+    }
   }
   async getUser() {
-    const user = await this.octo.getUser()
-    this.setState({
-      user
+    try {
+      const user = await this.octo.getUser()
+      this.setState({
+        user
+      })
+    } catch (e) {
+      this.setState({
+        error: 'Token似乎失效了！'
+      })
+    }
+  }
+  switchToSetting = () => {
+    Taro.switchTab({
+      url: '/pages/config/index'
     })
   }
   // chooseImage = () => {
@@ -102,9 +147,12 @@ class Index extends Component<Props, State> {
   componentWillReact() {}
 
   componentDidMount() {
-    this.getData()
+    autorun(() => {
+      console.log('auturon')
+      this.initOcto()
+    })
+    // this.getData()
   }
-
   componentWillUnmount() {}
 
   componentDidShow() {}
@@ -112,32 +160,49 @@ class Index extends Component<Props, State> {
   componentDidHide() {}
 
   render() {
-    const { owner, repoName } = this.props.ConfigStore
-    const { images, path, user } = this.state
-    return (
-      <View className='index'>
-        {/* <Button onClick={this.chooseImage}>choose image</Button> */}
+    const { owner, repoName } = ConfigStore
+    const { images, path, user, error, loading } = this.state
+    return !error ? (
+      <View className='index flex flex-column'>
         <View className='user'>
           <Image className='avatar' mode='aspectFill' src={user.avatar} />
-          {owner}
+          <View className="username">
+            {owner}
+          </View>
         </View>
         <View className='path-wrapper'>
-          <View className="path-item repo-name">{repoName}</View>
+          <View className='path-item repo-name'>{repoName}</View>
           {path.map(each => (
-            <View key={each} className='path-item'>{each}</View>
-          ))}
-        </View>
-        <View className='image-list'>
-          {images.map(each => (
-            <View key={each.sha} className='image-wrapper'>
-              <Image
-                className='image-item'
-                mode='aspectFill'
-                src={each.imgUrl}
-              />
+            <View key={each} className='path-item'>
+              {each}
             </View>
           ))}
         </View>
+        <View className='image-container flex-grow'>
+          {loading && (
+            <AtActivityIndicator mode='center' content='Loading...' />
+          )}
+          <View className="image-inner">
+            {images.map(each => (
+              <View key={each.sha} className='image-wrapper'>
+                <Image
+                  lazyLoad
+                  className='image-item'
+                  mode='aspectFill'
+                  src={each.imgUrl}
+                />
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
+    ) : (
+      <View className='empty-container flex-center flex-column'>
+        <AtIcon value='close-circle' size={64} />
+        <View>{error}</View>
+        <AtButton type='primary' onClick={this.switchToSetting}>
+          去设置
+        </AtButton>
       </View>
     )
   }
