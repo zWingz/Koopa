@@ -12,6 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "@tarojs/async-await": "^1.2.20",
+    "@tarojs/cli": "^1.2.20",
     "@tarojs/components": "1.2.16",
     "@tarojs/mobx": "1.2.16",
     "@tarojs/mobx-h5": "1.2.16",

@@ -1,5 +1,5 @@
 import { Rest } from './rest'
-import { getNow } from './helper'
+import { getNow, zip } from './helper'
 import { Config, ImgType, ImgZipType } from './interface'
 import join from 'url-join'
 import { Base64 } from 'js-base64'
@@ -7,6 +7,11 @@ import { Base64 } from 'js-base64'
 type DataJsonType = {
   data: ImgZipType[]
   sha: string
+}
+
+type UploadImageType = {
+  filename: string,
+  base64: string
 }
 
 class Cache {
@@ -24,6 +29,18 @@ class Cache {
   }
   get(path: string) {
     return this.path[path]
+  }
+  getOrCreate(path: string) {
+    const tmp = this.path[path]
+    if (tmp) {
+      return tmp
+    } else {
+      this.path[path] = {
+        data: [],
+        sha: ''
+      }
+      return this.path[path]
+    }
   }
 }
 
@@ -80,52 +97,67 @@ export class Octo {
       let { content } = await this.octokit.getBlob(treeItem.sha)
       // const buf = Buffer.from(content.data.content, content.data.encoding)
       const buf = Base64.decode(content)
-      const json: DataJsonType = JSON.parse(buf)
+      const json: ImgZipType[] = JSON.parse(buf)
+      console.log(json);
       const ret: DataJsonType = {
         ...defaultRet,
-        ...json,
+        data: json,
         sha: treeItem.sha
       }
+      console.log(ret);
       cache.createPath(path, ret)
       return ret
     }
+    console.log('cant find')
     return defaultRet
   }
   async updateDataJson(path, { data, sha }) {
     const r = await this.octokit.updateFile({
       path: join(path, 'data.json'),
       sha,
-      message: `Sync dataJson by PicGo at ${getNow()}`,
-      content: Base64.decode(JSON.stringify(data))
-      // content: Buffer.from(JSON.stringify(data)).toString('base64')
-    })
-    cache.createPath(path, {
-      sha: r.sha,
-      data: []
-    })
-    return r
-  }
-  async createDataJson(path, data) {
-    const r = await this.octokit.createFile({
-      path: join(path, 'data.json'),
-      message: `Sync dataJson by PicGo at ${getNow()}`,
-      content: Base64.decode(JSON.stringify(data))
+      message: `Updated dataJson by PicGo at ${getNow()}`,
+      content: Base64.encode(JSON.stringify(data))
       // content: Buffer.from(JSON.stringify(data)).toString('base64')
     })
     cache.updateSha(path, r.sha)
     return r
   }
-  async upload(path, img) {
-    const { fileName } = img
+  async createDataJson(path, data) {
+    const r = await this.octokit.createFile({
+      path: join(path, 'data.json'),
+      message: `Created dataJson by PicGo at ${getNow()}`,
+      content: Base64.encode(JSON.stringify(data))
+      // content: Buffer.from(JSON.stringify(data)).toString('base64')
+    })
+    cache.updateSha(path, r.sha)
+    return r
+  }
+  updateOrCreateDataJson(path) {
+    const dataJson = cache.getOrCreate(path)
+    if(dataJson.sha) {
+      return this.updateDataJson(path, dataJson)
+    } else {
+      return this.createDataJson(path, dataJson.data)
+    }
+  }
+  async upload(path: string, img: UploadImageType) {
+    const { filename } = img
     const d = await this.octokit.createFile({
-      path: join(path, fileName),
-      message: `Upload ${fileName} by picGo - ${getNow()}`,
-      content: img.base64Image
+      path: join(path, filename),
+      message: `Upload ${filename} by picGo - ${getNow()}`,
+      content: img.base64
     })
     if (d) {
+      const dataJson = cache.getOrCreate(path)
+      dataJson.data.push({
+        f: filename,
+        s: d.sha
+      })
+      console.log(cache)
       return {
-        imgUrl: this.parseUrl(path, fileName),
-        sha: d.sha
+        imgUrl: this.parseUrl(path, filename),
+        sha: d.sha,
+        filename
       }
     }
     throw d

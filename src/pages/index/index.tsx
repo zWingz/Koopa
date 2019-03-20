@@ -10,6 +10,7 @@ import { unzip } from '../../utils/helper'
 import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
 import { AtButton, AtIcon, AtActivityIndicator } from 'taro-ui'
+import { readFile } from '../../utils/wx';
 
 type Props = {
   ConfigStore: typeof ConfigStore
@@ -99,10 +100,11 @@ class Index extends Component<Props, State> {
     }
     try {
       const { sha, data } = await this.octo.getDataJson(this.path)
+      console.log(data);
       this.setState({
         sha,
         images: data.map(each => this.parse(each as ImgZipType)),
-        // loading: false
+        loading: false
       })
     } catch (e) {
       this.setState({
@@ -127,21 +129,25 @@ class Index extends Component<Props, State> {
       url: '/pages/config/index'
     })
   }
-  // chooseImage = () => {
-  //   chooseImage().then(r => {
-  //     this.readFile(r.tempFilePaths[0])
-  //   })
-  // }
-  // readFile = (filePath) => {
-  //   console.log(filePath);
-  //   wx.getFileSystemManager().readFile({
-  //     filePath,
-  //     encoding: 'base64',
-  //     success: (r) => {
-  //       console.log('read success');
-  //     }
-  //   })
-  // }
+  chooseImage = () => {
+    chooseImage().then(r => {
+      this.readFile(r.tempFilePaths[0])
+    })
+  }
+  readFile = async (filePath) => {
+    const ext = filePath.split('.').pop()
+    const content = await readFile(filePath)
+    console.log('read success');
+    // console.log(r)
+    await this.octo.upload(this.path, {
+      filename: `${new Date().getTime()}.${ext}`,
+      base64: content
+    })
+    this.octo.updateOrCreateDataJson(this.path)
+  }
+  updateOrCreateDataJson() {
+
+  }
   componentWillMount() {}
 
   componentWillReact() {}
@@ -195,6 +201,7 @@ class Index extends Component<Props, State> {
             ))}
           </View>
         </View>
+        <AtButton onClick={this.chooseImage}>上传</AtButton>
       </View>
     ) : (
       <View className='empty-container flex-center flex-column'>
