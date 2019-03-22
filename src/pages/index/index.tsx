@@ -2,7 +2,13 @@ import { ComponentType } from 'react'
 import Taro, { Component, Config, chooseImage } from '@tarojs/taro'
 import { View, Image } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
-import { getIns, Octo, clearIns } from '../../utils/octokit'
+import {
+  getIns,
+  Octo,
+  clearIns,
+  DirType,
+  DataJsonType
+} from '../../utils/octokit'
 import join from 'url-join'
 import './index.less'
 import { ImgZipType, ImgType } from 'src/utils/interface'
@@ -10,8 +16,9 @@ import { unzip } from '../../utils/helper'
 import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
 import { AtButton, AtIcon, AtActivityIndicator } from 'taro-ui'
-import { readFile } from '../../utils/wx'
-import '../../components/LoadImage'
+import { wxReadFile } from '../../utils/wx'
+import MyImage from '../../components/Image'
+// import '../../components/LoadImage'
 
 type Props = {
   ConfigStore: typeof ConfigStore
@@ -19,15 +26,16 @@ type Props = {
 
 type State = {
   path: string[]
+  parentSha: string
+  currentSha: string
   images: ImgType[]
-  sha?: string
+  dirs: DirType
   lastSync?: string
   user?: {
     username: string
     avatar: string
   }
   loading: boolean
-  hasDataJson: boolean
   error: string
 }
 
@@ -46,18 +54,19 @@ class Index extends Component<Props, State> {
   config: Config = {
     navigationBarTitleText: '首页',
     usingComponents: {
-      'load-image': '../../components/LoadImage/index'
+      'base-64-image': '../../components/Base64Image/index'
     }
   }
   state: State = {
     path: [],
     images: [],
-    sha: '',
+    dirs: {},
+    parentSha: '',
+    currentSha: '',
     lastSync: '',
     user: null,
     error: ConfigStore.valid ? '' : CONFIG_ERROR_MSG,
-    loading: true,
-    hasDataJson: false
+    loading: true
   }
   octo: Octo = null
   get path() {
@@ -103,16 +112,21 @@ class Index extends Component<Props, State> {
       this.setState({ loading: true })
     }
     try {
-      const { sha, data } = await this.octo.getDataJson(this.path)
-      console.log(data)
+      let dataJson: DataJsonType
+      if (!this.state.currentSha) {
+        dataJson = await this.octo.getRootDataJson()
+      } else {
+        dataJson = await this.octo.getPathDataJson(this.path, this.state.currentSha)
+      }
+      const { data, dir } = dataJson
       this.setState({
-        sha,
-        images: data.map(each => this.parse(each as ImgZipType)),
+        images: data.map(each => this.parse(each)),
+        dirs: dir,
         loading: false
       })
     } catch (e) {
       this.setState({
-        error: 'e.message'
+        error: e.message
       })
     }
   }
@@ -134,29 +148,28 @@ class Index extends Component<Props, State> {
     })
   }
   chooseImage = () => {
-    chooseImage().then(r => {
-      this.readFile(r.tempFilePaths[0])
+    chooseImage({
+      count: 1
+    }).then(r => {
+      this.uploadImg(r.tempFilePaths[0])
     })
   }
-  readFile = async filePath => {
+  uploadImg = async filePath => {
     const ext = filePath.split('.').pop()
-    const content = await readFile(filePath)
-    console.log('read success')
-    // console.log(r)
-    await this.octo.upload(this.path, {
+    const content = await wxReadFile(filePath)
+    await this.octo.uploadImage(this.path, {
       filename: `${new Date().getTime()}.${ext}`,
       base64: content
     })
+    this.getImage()
     this.octo.updateOrCreateDataJson(this.path)
   }
-  updateOrCreateDataJson() {}
   componentWillMount() {}
 
   componentWillReact() {}
 
   componentDidMount() {
     autorun(() => {
-      console.log('auturon')
       this.initOcto()
     })
     // this.getData()
@@ -190,18 +203,7 @@ class Index extends Component<Props, State> {
           )}
           <View className='image-inner'>
             {images.map(each => (
-              <View key={each.sha} className='image-wrapper'>
-                {ConfigStore.isPrivate ? (
-                  <load-image sha={each.sha} />
-                ) : (
-                  <Image
-                    lazyLoad
-                    className='image-item'
-                    mode='aspectFill'
-                    src={each.imgUrl}
-                  />
-                )}
-              </View>
+              <MyImage sha={each.sha} imgUrl={each.imgUrl} key={each.sha} />
             ))}
           </View>
         </View>

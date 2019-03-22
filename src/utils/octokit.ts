@@ -4,13 +4,18 @@ import { Config, ImgType, ImgZipType } from './interface'
 import join from 'url-join'
 import { Base64 } from 'js-base64'
 
-type DataJsonType = {
+export type DirType = {
+  [k: string]: string
+}
+
+export type DataJsonType = {
   data: ImgZipType[]
-  sha: string
+  dir: DirType
+  sha?: string
 }
 
 type UploadImageType = {
-  filename: string,
+  filename: string
   base64: string
 }
 
@@ -37,7 +42,8 @@ class Cache {
     } else {
       this.path[path] = {
         data: [],
-        sha: ''
+        sha: '',
+        dir: {}
       }
       return this.path[path]
     }
@@ -45,12 +51,16 @@ class Cache {
 }
 
 const cache = new Cache()
+const defaultDataJson: DataJsonType = {
+  sha: '',
+  data: [],
+  dir: {}
+}
 
 export class Octo {
   owner: string = ''
   repo: string = ''
   branch: string = ''
-  token: string = ''
   customUrl: string = ''
   octokit: Rest
   constructor({ repo, branch, token, customUrl = '' }: Config) {
@@ -64,69 +74,60 @@ export class Octo {
     this.owner = owner
     this.repo = r
     this.branch = branch || 'master'
-    this.token = token
+    // this.token = token
     this.customUrl = customUrl
   }
-
-  async getPathTree(
-    path
-  ): Promise<{ sha: string; tree: { path: string; sha: string }[] }> {
-    let tree = await this.octokit.getTree(this.branch)
-    const arr = path.split('/').filter(each => each)
-    let sha = this.branch
-    for (let i = 0; i < arr.length; i++) {
-      const item = tree.filter(each => arr[i].endsWith(each.path))[0]
-      if (!item) return Promise.reject(new Error(`Can\'t find ${path}`))
-      sha = item.sha
-      tree = await this.octokit.getTree(sha)
-    }
-    return { sha, tree }
+  private getRootPath(): Promise<{ path: string; sha: string }[]> {
+    return this.octokit.getTree(this.branch)
   }
-  async getDataJson(path: string): Promise<DataJsonType> {
+  async getRootDataJson(): Promise<DataJsonType> {
+    const root = await this.getRootPath()
+    const dataJson = root.filter(each => each.path === 'data.json')[0]
+    if (dataJson) {
+      return this.getPathDataJson('', dataJson.sha)
+    }
+    return defaultDataJson
+  }
+  async getPathDataJson(path: string, sha?: string): Promise<DataJsonType> {
     const c = cache.get(path)
     if (c) {
       return c
     }
-    const defaultRet: DataJsonType = {
-      sha: '',
-      data: []
+    let { content } = await this.octokit.getBlob(sha)
+    // const buf = Buffer.from(content.data.content, content.data.encoding)
+    const buf = Base64.decode(content)
+    const json: { data: ImgZipType[]; dir: DirType } = JSON.parse(buf)
+    const ret: DataJsonType = {
+      ...defaultDataJson,
+      data: json.data,
+      dir: json.dir,
+      sha: sha
     }
-    const { tree } = await this.getPathTree(path)
-    const treeItem = tree.filter(each => each.path === 'data.json')[0]
-    if (treeItem) {
-      let { content } = await this.octokit.getBlob(treeItem.sha)
-      // const buf = Buffer.from(content.data.content, content.data.encoding)
-      const buf = Base64.decode(content)
-      const json: ImgZipType[] = JSON.parse(buf)
-      console.log(json);
-      const ret: DataJsonType = {
-        ...defaultRet,
-        data: json,
-        sha: treeItem.sha
-      }
-      console.log(ret);
-      cache.createPath(path, ret)
-      return ret
-    }
-    console.log('cant find')
-    return defaultRet
+    cache.createPath(path, ret)
+    return ret
   }
-  async updateDataJson(path, { data, sha }) {
+
+  private async updateDataJson(path, { data, sha, dir }: DataJsonType) {
     const r = await this.octokit.updateFile({
       path: join(path, 'data.json'),
       sha,
       message: `Updated dataJson by PicGo at ${getNow()}`,
-      content: Base64.encode(JSON.stringify(data))
+      content: Base64.encode(
+        JSON.stringify({
+          data,
+          dir
+        })
+      )
       // content: Buffer.from(JSON.stringify(data)).toString('base64')
     })
     cache.updateSha(path, r.sha)
     return r
   }
-  async createDataJson(path, data) {
+  private async createDataJson(path, { data, dir }: DataJsonType) {
     const r = await this.octokit.createFile({
       path: join(path, 'data.json'),
       message: `Created dataJson by PicGo at ${getNow()}`,
-      content: Base64.encode(JSON.stringify(data))
+      content: Base64.encode(JSON.stringify({ data, dir }))
       // content: Buffer.from(JSON.stringify(data)).toString('base64')
     })
     cache.updateSha(path, r.sha)
@@ -134,13 +135,13 @@ export class Octo {
   }
   updateOrCreateDataJson(path) {
     const dataJson = cache.getOrCreate(path)
-    if(dataJson.sha) {
+    if (dataJson.sha) {
       return this.updateDataJson(path, dataJson)
     } else {
-      return this.createDataJson(path, dataJson.data)
+      return this.createDataJson(path, dataJson)
     }
   }
-  async upload(path: string, img: UploadImageType) {
+  async uploadImage(path: string, img: UploadImageType) {
     const { filename } = img
     const d = await this.octokit.createFile({
       path: join(path, filename),

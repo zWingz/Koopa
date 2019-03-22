@@ -1,7 +1,8 @@
 .index {
   height: 100vh;
-  padding: 0 30px;
+  padding: 0 30px 20px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 .user {
   display: flex;
@@ -54,25 +55,22 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-  }
-  &-wrapper {
-    width: @width;
-    height: @width;
-    box-sizing: border-box;
-    margin-bottom: 10px;
-    &:nth-child(3n+1) {
-      margin-right: 10px;
-    }
-    &:nth-child(3n+2) {
-      margin-right: 10px;
+    my-image {
+      &:nth-child(3n + 1) {
+        margin-right: 10px;
+      }
+      &:nth-child(3n + 2) {
+        margin-right: 10px;
+      }
     }
   }
   &-item {
     width: @width;
     height: @width;
+    box-sizing: border-box;
+    margin-bottom: 10px;
   }
 }
-
 
 .empty-container {
   font-size: 32px;

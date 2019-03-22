@@ -1,4 +1,4 @@
-export function readFile(filePath): Promise<string> {
+export function wxReadFile(filePath): Promise<string> {
   return new Promise((res, rej) => {
     wx.getFileSystemManager().readFile({
       filePath,
