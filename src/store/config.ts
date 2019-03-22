@@ -15,6 +15,9 @@ class ConfigStore {
   @observable
   branch:string = 'master'
 
+  @observable
+  isPrivate: boolean = false
+
   @computed get owner() {
     return this.repo.split('/')[0]
   }
@@ -24,7 +27,7 @@ class ConfigStore {
   }
 
   @action
-  setConfig(config: {[t in keyof Config]?: string}) {
+  setConfig(config: {[t in keyof Config]?: string | boolean}) {
     Object.keys(config).forEach((each: keyof Config) => {
       this.setKey(each, config[each])
     })

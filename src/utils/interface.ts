@@ -7,6 +7,7 @@ export interface RestConfig {
 
 export interface Config extends RestConfig {
   customUrl?: string
+  isPrivate?: boolean
 }
 
 export type ImgType = {

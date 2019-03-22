@@ -46,13 +46,14 @@
   &-container {
     position: relative;
     display: flex;
-    justify-content: center;
     flex-grow: 1;
     overflow: auto;
+    flex-direction: column;
   }
   &-inner {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
   }
   &-wrapper {
     width: @width;

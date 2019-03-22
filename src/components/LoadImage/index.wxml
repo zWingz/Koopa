@@ -1,0 +1,8 @@
+<wxs module="m1">
+  function join(arr = [1,2,3,4]) {
+    return arr.join('')
+  }
+  module.exports.join = join;
+</wxs>
+
+<image wx:if='{{show}}' src='{{m1.join(arr)}}' class='image-item' mode='aspectFill' lazy-load></image>

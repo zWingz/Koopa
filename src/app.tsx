@@ -8,6 +8,7 @@ import "taro-ui/dist/style/components/icon.scss";
 import "taro-ui/dist/style/components/button.scss";
 import "taro-ui/dist/style/components/loading.scss";
 import "taro-ui/dist/style/components/activity-indicator.scss";
+import "taro-ui/dist/style/components/switch.scss";
 import './app.less'
 
 const store = {

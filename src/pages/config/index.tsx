@@ -4,7 +4,7 @@ import { View } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
 import './index.less'
 import ConfigStore from '../../store/config'
-import { AtInput, AtButton } from 'taro-ui'
+import { AtInput, AtButton, AtSwitch } from 'taro-ui'
 
 type Prop = {
   ConfigStore: typeof ConfigStore
@@ -17,12 +17,13 @@ class ConfigPage extends Component<Prop> {
     token: '',
     repo: '',
     branch: '',
-    customUrl: ''
+    customUrl: '',
+    isPrivate: false
   }
   constructor(p: Prop) {
     super(p)
-    const { token, repo, branch, customUrl } = p.ConfigStore
-    this.setState({ token, repo, branch, customUrl })
+    const { token, repo, branch, customUrl, isPrivate } = p.ConfigStore
+    this.setState({ token, repo, branch, customUrl, isPrivate })
   }
   handleChange = (key, value) => {
     this.setState({
@@ -69,8 +70,15 @@ class ConfigPage extends Component<Prop> {
           value={customUrl}
           onChange={value => this.handleChange('customUrl', value)}
         />
+        <AtSwitch
+          title='是否私有'
+          checked={this.state.isPrivate}
+          onChange={value => this.handleChange('isPrivate', value)}
+        />
         <View className='submit-wrapper'>
-          <AtButton type='primary' onClick={this.save}>保存</AtButton>
+          <AtButton type='primary' onClick={this.save}>
+            保存
+          </AtButton>
         </View>
       </View>
     )

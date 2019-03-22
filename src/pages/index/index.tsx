@@ -10,8 +10,9 @@ import { unzip } from '../../utils/helper'
 import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
 import { AtButton, AtIcon, AtActivityIndicator } from 'taro-ui'
-import { readFile } from '../../utils/wx';
-import LoadImage from '../../components/Image'
+import { readFile } from '../../utils/wx'
+import '../../components/LoadImage'
+
 type Props = {
   ConfigStore: typeof ConfigStore
 }
@@ -43,7 +44,10 @@ class Index extends Component<Props, State> {
    * 提示和声明 navigationBarTextStyle: 'black' | 'white' 类型冲突, 需要显示声明类型
    */
   config: Config = {
-    navigationBarTitleText: '首页'
+    navigationBarTitleText: '首页',
+    usingComponents: {
+      'load-image': '../../components/LoadImage/index'
+    }
   }
   state: State = {
     path: [],
@@ -100,7 +104,7 @@ class Index extends Component<Props, State> {
     }
     try {
       const { sha, data } = await this.octo.getDataJson(this.path)
-      console.log(data);
+      console.log(data)
       this.setState({
         sha,
         images: data.map(each => this.parse(each as ImgZipType)),
@@ -134,10 +138,10 @@ class Index extends Component<Props, State> {
       this.readFile(r.tempFilePaths[0])
     })
   }
-  readFile = async (filePath) => {
+  readFile = async filePath => {
     const ext = filePath.split('.').pop()
     const content = await readFile(filePath)
-    console.log('read success');
+    console.log('read success')
     // console.log(r)
     await this.octo.upload(this.path, {
       filename: `${new Date().getTime()}.${ext}`,
@@ -145,9 +149,7 @@ class Index extends Component<Props, State> {
     })
     this.octo.updateOrCreateDataJson(this.path)
   }
-  updateOrCreateDataJson() {
-
-  }
+  updateOrCreateDataJson() {}
   componentWillMount() {}
 
   componentWillReact() {}
@@ -172,9 +174,7 @@ class Index extends Component<Props, State> {
       <View className='index flex flex-column'>
         <View className='user'>
           <Image className='avatar' mode='aspectFill' src={user.avatar} />
-          <View className="username">
-            {owner}
-          </View>
+          <View className='username'>{owner}</View>
         </View>
         <View className='path-wrapper'>
           <View className='path-item repo-name'>{repoName}</View>
@@ -188,16 +188,19 @@ class Index extends Component<Props, State> {
           {loading && (
             <AtActivityIndicator mode='center' content='Loading...' />
           )}
-          <View className="image-inner">
+          <View className='image-inner'>
             {images.map(each => (
               <View key={each.sha} className='image-wrapper'>
-                <LoadImage sha={each.sha}></LoadImage>
-                {/* <Image
-                  lazyLoad
-                  className='image-item'
-                  mode='aspectFill'
-                  src={each.imgUrl}
-                /> */}
+                {ConfigStore.isPrivate ? (
+                  <load-image sha={each.sha} />
+                ) : (
+                  <Image
+                    lazyLoad
+                    className='image-item'
+                    mode='aspectFill'
+                    src={each.imgUrl}
+                  />
+                )}
               </View>
             ))}
           </View>
