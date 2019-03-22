@@ -55,7 +55,7 @@ class Rest {
       }
     })
   }
-  getTree(sha: string): Promise<{ path: string; sha: string }[]> {
+  getTree(sha: string): Promise<{ path: string; sha: string, type: string }[]> {
     const url = `/repos/${this.repo}/git/trees/${sha}`
     return this.request({ url }).then(d => d.tree)
   }
@@ -98,37 +98,37 @@ class Rest {
       }
     })
   }
-  updateFile({
-    path,
-    content,
-    message,
-    sha
-  }: {
-    path: string
-    content: string
-    message: string
-    sha: string
-  }): Promise<FileResponseType> {
-    const url = `/repos/${this.repo}/contents/${path}`
-    return this.request({
-      url,
-      method: 'PUT',
-      data: {
-        content,
-        message,
-        sha
-      }
-    }).then(r => {
-      const {
-        content: { name, path, sha }
-      } = r
-      return {
-        name,
-        path,
-        sha
-      }
-    })
-  }
+  // updateFile({
+  //   path,
+  //   content,
+  //   message,
+  //   sha
+  // }: {
+  //   path: string
+  //   content: string
+  //   message: string
+  //   sha: string
+  // }): Promise<FileResponseType> {
+  //   const url = `/repos/${this.repo}/contents/${path}`
+  //   return this.request({
+  //     url,
+  //     method: 'PUT',
+  //     data: {
+  //       content,
+  //       message,
+  //       sha
+  //     }
+  //   }).then(r => {
+  //     const {
+  //       content: { name, path, sha }
+  //     } = r
+  //     return {
+  //       name,
+  //       path,
+  //       sha
+  //     }
+  //   })
+  // }
   deleteFile({
     path,
     message,

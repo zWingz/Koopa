@@ -10,13 +10,13 @@ export default class MyImage extends Component<{
   }
   config: Config = {
     usingComponents: {
-      'base-64-image': '../../components/Base64Image/index'
+      'base-image': '../../components/Base64Image/index'
     }
   }
   render() {
     const { imgUrl, sha } = this.props
     return ConfigStore.isPrivate ? (
-      <base-64-image sha={sha} />
+      <base-image sha={sha} />
     ) : (
       <Image lazyLoad className='image-item' mode='aspectFill' src={imgUrl} />
     )

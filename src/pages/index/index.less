@@ -41,6 +41,20 @@
   }
 }
 
+.dir {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  image {
+    width: 149px;
+    height: 128px;
+  }
+  &-name {
+    font-size: 30px;
+  }
+}
+
 @width: (750-60-20)/3px;
 
 .image {
@@ -55,7 +69,12 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    my-image {
+    my-image,
+    dir {
+      margin-bottom: 10px;
+      overflow: hidden;
+      width: @width;
+      height: @width;
       &:nth-child(3n + 1) {
         margin-right: 10px;
       }
@@ -68,7 +87,6 @@
     width: @width;
     height: @width;
     box-sizing: border-box;
-    margin-bottom: 10px;
   }
 }
 

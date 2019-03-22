@@ -11,12 +11,7 @@ export interface Config extends RestConfig {
 }
 
 export type ImgType = {
-  fileName: string;
-  imgUrl: string;
+  name: string;
+  url?: string;
   sha: string
-}
-
-export type ImgZipType = {
-  f: string,
-  s?: string
 }

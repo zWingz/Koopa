@@ -1,5 +1,10 @@
 import { ComponentType } from 'react'
-import Taro, { Component, Config, chooseImage } from '@tarojs/taro'
+import Taro, {
+  Component,
+  Config,
+  chooseImage,
+  PureComponent
+} from '@tarojs/taro'
 import { View, Image } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
 import {
@@ -11,13 +16,15 @@ import {
 } from '../../utils/octokit'
 import join from 'url-join'
 import './index.less'
-import { ImgZipType, ImgType } from 'src/utils/interface'
+import { ImgType } from 'src/utils/interface'
 import { unzip } from '../../utils/helper'
 import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
 import { AtButton, AtIcon, AtActivityIndicator } from 'taro-ui'
 import { wxReadFile } from '../../utils/wx'
 import MyImage from '../../components/Image'
+import Dir from './Dir'
+import '../../image/folder.png'
 // import '../../components/LoadImage'
 
 type Props = {
@@ -26,11 +33,8 @@ type Props = {
 
 type State = {
   path: string[]
-  parentSha: string
-  currentSha: string
   images: ImgType[]
-  dirs: DirType
-  lastSync?: string
+  dir: DirType
   user?: {
     username: string
     avatar: string
@@ -40,6 +44,7 @@ type State = {
 }
 
 const CONFIG_ERROR_MSG = '配置不正确，请修改后重试'
+
 
 @inject('ConfigStore')
 @observer
@@ -52,18 +57,12 @@ class Index extends Component<Props, State> {
    * 提示和声明 navigationBarTextStyle: 'black' | 'white' 类型冲突, 需要显示声明类型
    */
   config: Config = {
-    navigationBarTitleText: '首页',
-    usingComponents: {
-      'base-64-image': '../../components/Base64Image/index'
-    }
+    navigationBarTitleText: '首页'
   }
   state: State = {
     path: [],
     images: [],
-    dirs: {},
-    parentSha: '',
-    currentSha: '',
-    lastSync: '',
+    dir: {},
     user: null,
     error: ConfigStore.valid ? '' : CONFIG_ERROR_MSG,
     loading: true
@@ -75,10 +74,10 @@ class Index extends Component<Props, State> {
     return join(...this.state.path)
   }
 
-  parse(img: ImgZipType) {
+  parse(img: ImgType): ImgType {
     return {
       ...unzip(img),
-      imgUrl: this.octo.parseUrl(this.path, img.f)
+      url: this.octo.parseUrl(this.path, img.name)
     }
   }
   initOcto() {
@@ -107,21 +106,16 @@ class Index extends Component<Props, State> {
       await this.getImage()
     }
   }
-  async getImage() {
+  async getImage(sha?: string) {
     if (!this.state.loading) {
       this.setState({ loading: true })
     }
     try {
-      let dataJson: DataJsonType
-      if (!this.state.currentSha) {
-        dataJson = await this.octo.getRootDataJson()
-      } else {
-        dataJson = await this.octo.getPathDataJson(this.path, this.state.currentSha)
-      }
-      const { data, dir } = dataJson
+      const dataJson = await this.octo.getTree(this.path, sha)
+      const { images, dir } = dataJson
       this.setState({
-        images: data.map(each => this.parse(each)),
-        dirs: dir,
+        images: images.map(each => this.parse(each)),
+        dir: dir,
         loading: false
       })
     } catch (e) {
@@ -162,7 +156,6 @@ class Index extends Component<Props, State> {
       base64: content
     })
     this.getImage()
-    this.octo.updateOrCreateDataJson(this.path)
   }
   componentWillMount() {}
 
@@ -182,7 +175,9 @@ class Index extends Component<Props, State> {
 
   render() {
     const { owner, repoName } = ConfigStore
-    const { images, path, user, error, loading } = this.state
+    const { images, path, user, error, loading, dir } = this.state
+    const DirKeys = Object.keys(dir)
+    console.log(images, DirKeys)
     return !error ? (
       <View className='index flex flex-column'>
         <View className='user'>
@@ -202,8 +197,12 @@ class Index extends Component<Props, State> {
             <AtActivityIndicator mode='center' content='Loading...' />
           )}
           <View className='image-inner'>
+            {DirKeys.map(each => {
+              const d = dir[each]
+              return <Dir key={d} name={each} sha={d} />
+            })}
             {images.map(each => (
-              <MyImage sha={each.sha} imgUrl={each.imgUrl} key={each.sha} />
+              <MyImage sha={each.sha} imgUrl={each.url} key={each.sha} />
             ))}
           </View>
         </View>
