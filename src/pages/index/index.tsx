@@ -5,14 +5,16 @@ import Taro, {
   chooseImage,
   PureComponent
 } from '@tarojs/taro'
-import { View, Image } from '@tarojs/components'
+import { View, Image, Button } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
 import {
   getIns,
   Octo,
   clearIns,
   DirType,
-  DataJsonType
+  DataJsonType,
+  cache,
+  clone
 } from '../../utils/octokit'
 import join from 'url-join'
 import './index.less'
@@ -20,7 +22,17 @@ import { ImgType } from 'src/utils/interface'
 import { unzip } from '../../utils/helper'
 import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
-import { AtButton, AtIcon, AtActivityIndicator } from 'taro-ui'
+import {
+  AtButton,
+  AtIcon,
+  AtActivityIndicator,
+  AtModal,
+  AtModalHeader,
+  AtModalContent,
+  AtModalAction,
+  AtInput,
+  AtMessage
+} from 'taro-ui'
 import { wxReadFile } from '../../utils/wx'
 import MyImage from '../../components/Image'
 import Dir from './Dir'
@@ -32,7 +44,7 @@ type Props = {
 }
 
 type State = {
-  path: string[]
+  pathArr: string[]
   images: ImgType[]
   dir: DirType
   user?: {
@@ -41,10 +53,11 @@ type State = {
   }
   loading: boolean
   error: string
+  modalShow: boolean
+  newPathName: string
 }
 
 const CONFIG_ERROR_MSG = '配置不正确，请修改后重试'
-
 
 @inject('ConfigStore')
 @observer
@@ -60,18 +73,20 @@ class Index extends Component<Props, State> {
     navigationBarTitleText: '首页'
   }
   state: State = {
-    path: [],
+    pathArr: [],
     images: [],
     dir: {},
     user: null,
     error: ConfigStore.valid ? '' : CONFIG_ERROR_MSG,
-    loading: true
+    loading: true,
+    modalShow: false,
+    newPathName: ''
   }
   octo: Octo = null
   get path() {
-    const { path } = this.state
+    const { pathArr: path } = this.state
     if (!path.length) return ''
-    return join(...this.state.path)
+    return join(...this.state.pathArr)
   }
 
   parse(img: ImgType): ImgType {
@@ -89,7 +104,7 @@ class Index extends Component<Props, State> {
       return
     } else {
       this.setState({
-        path: [],
+        pathArr: [],
         images: [],
         user: null,
         error: ''
@@ -98,6 +113,12 @@ class Index extends Component<Props, State> {
     }
     this.octo = getIns(ConfigStore)
     this.getData()
+  }
+
+  onNewPathChange = val => {
+    this.setState({
+      newPathName: val
+    })
   }
 
   async getData() {
@@ -115,7 +136,7 @@ class Index extends Component<Props, State> {
       const { images, dir } = dataJson
       this.setState({
         images: images.map(each => this.parse(each)),
-        dir: dir,
+        dir: { ...dir },
         loading: false
       })
     } catch (e) {
@@ -157,6 +178,63 @@ class Index extends Component<Props, State> {
     })
     this.getImage()
   }
+  showModal = () => {
+    this.setState({
+      modalShow: true
+    })
+  }
+  hideModal = () => {
+    this.setState({
+      modalShow: false,
+      newPathName: ''
+    })
+  }
+  savePath = () => {
+    const { newPathName, dir } = this.state
+    if (newPathName in dir) {
+      Taro.atMessage({
+        message: '目录已存在',
+        type: 'error'
+      })
+      return
+    }
+    this.octo.createPath(this.path, newPathName)
+    this.setState({
+      dir: {
+        ...dir,
+        [newPathName]: ''
+      }
+    })
+    this.hideModal()
+  }
+  enterDir = (name: string, sha?: string) => {
+    const { pathArr } = this.state
+    this.setState(
+      {
+        pathArr: pathArr.concat(name)
+      },
+      () => {
+        this.getImage(sha)
+      }
+    )
+  }
+  backDir = (name: string) => {
+    const { pathArr } = this.state
+    let target = []
+    if (name) {
+      const index = pathArr.indexOf(name)
+      if (index === pathArr.length - 1) return
+      target = pathArr.slice(0, index + 1)
+    }
+    this.setState(
+      {
+        pathArr: target
+      },
+      () => {
+        this.getImage()
+      }
+    )
+  }
   componentWillMount() {}
 
   componentWillReact() {}
@@ -175,19 +253,41 @@ class Index extends Component<Props, State> {
 
   render() {
     const { owner, repoName } = ConfigStore
-    const { images, path, user, error, loading, dir } = this.state
+    const {
+      images,
+      pathArr: path,
+      user,
+      error,
+      loading,
+      dir,
+      modalShow: show,
+      newPathName: newPath
+    } = this.state
     const DirKeys = Object.keys(dir)
-    console.log(images, DirKeys)
     return !error ? (
       <View className='index flex flex-column'>
         <View className='user'>
           <Image className='avatar' mode='aspectFill' src={user.avatar} />
-          <View className='username'>{owner}</View>
+          <View className='username flex-grow'>{owner}</View>
+          <AtButton
+            type='secondary'
+            size='small'
+            className='path-create'
+            onClick={this.showModal}>
+            新建目录
+          </AtButton>
         </View>
         <View className='path-wrapper'>
-          <View className='path-item repo-name'>{repoName}</View>
+          <View
+            className='path-item repo-name'
+            onClick={() => this.backDir('')}>
+            {repoName}
+          </View>
           {path.map(each => (
-            <View key={each} className='path-item'>
+            <View
+              key={each}
+              className='path-item'
+              onClick={() => this.backDir(each)}>
               {each}
             </View>
           ))}
@@ -199,7 +299,7 @@ class Index extends Component<Props, State> {
           <View className='image-inner'>
             {DirKeys.map(each => {
               const d = dir[each]
-              return <Dir key={d} name={each} sha={d} />
+              return <Dir key={d} name={each} sha={d} onEnter={this.enterDir} />
             })}
             {images.map(each => (
               <MyImage sha={each.sha} imgUrl={each.url} key={each.sha} />
@@ -207,6 +307,29 @@ class Index extends Component<Props, State> {
           </View>
         </View>
         <AtButton onClick={this.chooseImage}>上传</AtButton>
+        <AtModal isOpened={show}>
+          <AtModalHeader>新建目录</AtModalHeader>
+          <AtModalContent>
+            <AtInput
+              name='newPath'
+              placeholder='输入目录名'
+              value={newPath}
+              onChange={this.onNewPathChange}
+            />
+            <View className='tips'>
+              <View>提示:</View>
+              <View>1. 只有上传了图片后目录才生效</View>
+              <View>2. 目录生效后无法修改名称</View>
+            </View>
+          </AtModalContent>
+          <AtModalAction>
+            <Button onClick={this.hideModal}>取消</Button>
+            <Button disabled={!newPath} onClick={this.savePath}>
+              确定
+            </Button>
+          </AtModalAction>
+        </AtModal>
+        <AtMessage />
       </View>
     ) : (
       <View className='empty-container flex-center flex-column'>
