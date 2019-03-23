@@ -91,7 +91,7 @@ class Index extends Component<Props, State> {
 
   parse(img: ImgType): ImgType {
     return {
-      ...unzip(img),
+      ...img,
       url: this.octo.parseUrl(this.path, img.name)
     }
   }

@@ -1,8 +1,7 @@
 import { Rest } from './rest'
-import { getNow, zip } from './helper'
-import { Config, ImgType, ImgZipType } from './interface'
+import { getNow } from './helper'
+import { Config, ImgType } from './interface'
 import join from 'url-join'
-import { Base64 } from 'js-base64'
 
 export function clone(obj) {
   return JSON.parse(JSON.stringify(obj))
