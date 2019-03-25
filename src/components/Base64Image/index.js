@@ -12,7 +12,8 @@ Component({
     show: false
   },
   properties: {
-    sha: String
+    sha: String,
+    type: String
   },
   attached() {
     this.getData()
@@ -24,7 +25,7 @@ Component({
         start = 0,
         end = 0
       ins.octokit.getBlob(this.data.sha).then(({ content }) => {
-        const tmp = 'data:image/jpeg;base64,' + content.replace(/[\r\t\n]/g, '')
+        const tmp = `data:image/${this.data.type};base64,` + content.replace(/[\r\t\n]/g, '')
         const len = tmp.length
         while ((end = start + step) < len) {
           const key = `arr[${index}]`
@@ -37,11 +38,10 @@ Component({
         this.setData({
           [`arr[${index}]`]: tmp.slice(start)
         })
-        // setTimeout(() => {
+        this.triggerEvent('load')
         this.setData({
           show: true
         })
-        // })
       })
     }
   }

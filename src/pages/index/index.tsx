@@ -1,25 +1,11 @@
 import { ComponentType } from 'react'
-import Taro, {
-  Component,
-  Config,
-  chooseImage,
-  PureComponent
-} from '@tarojs/taro'
+import Taro, { Component, Config, chooseImage } from '@tarojs/taro'
 import { View, Image, Button } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
-import {
-  getIns,
-  Octo,
-  clearIns,
-  DirType,
-  DataJsonType,
-  cache,
-  clone
-} from '../../utils/octokit'
+import { getIns, Octo, clearIns, DirType } from '../../utils/octokit'
 import join from 'url-join'
 import './index.less'
 import { ImgType } from 'src/utils/interface'
-import { unzip } from '../../utils/helper'
 import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
 import {
@@ -58,6 +44,9 @@ type State = {
 }
 
 const CONFIG_ERROR_MSG = '配置不正确，请修改后重试'
+function getImageType(name) {
+  return name.split('.').slice(-1)
+}
 
 @inject('ConfigStore')
 @observer
@@ -83,18 +72,38 @@ class Index extends Component<Props, State> {
     newPathName: ''
   }
   octo: Octo = null
+
+  /**
+   * 获取拼接后的path
+   *
+   * @readonly
+   * @memberof Index
+   */
   get path() {
     const { pathArr: path } = this.state
     if (!path.length) return ''
     return join(...this.state.pathArr)
   }
 
+  /**
+   * 根据图片名称以及路径, 设置图片的url
+   *
+   * @param {ImgType} img
+   * @returns {ImgType}
+   * @memberof Index
+   */
   parse(img: ImgType): ImgType {
     return {
       ...img,
       url: this.octo.parseUrl(this.path, img.name)
     }
   }
+  /**
+   * 初始化octo
+   * 如果Config修改了也会重新出发
+   *
+   * @memberof Index
+   */
   initOcto() {
     if (!ConfigStore.valid) {
       this.octo = null
@@ -115,21 +124,39 @@ class Index extends Component<Props, State> {
     this.getData()
   }
 
+  /**
+   * 路径名onChange事件
+   *
+   * @memberof Index
+   */
   onNewPathChange = val => {
     this.setState({
       newPathName: val
     })
   }
 
+  /**
+   * 获取数据
+   * 包括user和图片
+   * 一般用在第一次加载或者修改Config之后
+   *
+   * @memberof Index
+   */
   async getData() {
     if (this.octo) {
       await this.getUser()
       await this.getImage()
     }
   }
+  /**
+   * 获取当前路径图片列表
+   *
+   * @param {string} [sha]
+   * @memberof Index
+   */
   async getImage(sha?: string) {
     if (!this.state.loading) {
-      this.setState({ loading: true })
+      this.setState({ loading: true, images: [], dir: {} })
     }
     try {
       const dataJson = await this.octo.getTree(this.path, sha)
@@ -139,12 +166,20 @@ class Index extends Component<Props, State> {
         dir: { ...dir },
         loading: false
       })
+      Taro.hideLoading()
     } catch (e) {
       this.setState({
-        error: e.message
+        error: e.message,
+        loading: false
       })
+      Taro.hideLoading()
     }
   }
+  /**
+   * 获取用户信息
+   *
+   * @memberof Index
+   */
   async getUser() {
     try {
       const user = await this.octo.getUser()
@@ -157,17 +192,30 @@ class Index extends Component<Props, State> {
       })
     }
   }
+  /**
+   * 跳转到Setting
+   *
+   * @memberof Index
+   */
   switchToSetting = () => {
     Taro.switchTab({
       url: '/pages/config/index'
     })
   }
-  chooseImage = () => {
+  /**
+   * 选择图片
+   *
+   * @memberof Index
+   */
+  onChooseImage = () => {
     chooseImage({
       count: 1
-    }).then(r => {
-      this.uploadImg(r.tempFilePaths[0])
-    })
+    }).then(
+      r => {
+        this.uploadImg(r.tempFilePaths[0])
+      },
+      () => {}
+    )
   }
   uploadImg = async filePath => {
     const ext = filePath.split('.').pop()
@@ -207,6 +255,12 @@ class Index extends Component<Props, State> {
     })
     this.hideModal()
   }
+  /**
+   * 进入目录
+   * 并根据目录sha获取数据
+   *
+   * @memberof Index
+   */
   enterDir = (name: string, sha?: string) => {
     const { pathArr } = this.state
     this.setState(
@@ -218,6 +272,12 @@ class Index extends Component<Props, State> {
       }
     )
   }
+  /**
+   * 回到某个目录
+   * 一般都会有缓存, 直接从缓存中获取数据
+   *
+   * @memberof Index
+   */
   backDir = (name: string) => {
     const { pathArr } = this.state
     let target = []
@@ -234,6 +294,23 @@ class Index extends Component<Props, State> {
         this.getImage()
       }
     )
+  }
+  onDelete = (img: ImgType) => {
+    Taro.showModal({
+      title: '操作提示',
+      content: '确定要删除吗?',
+    }).then(async (res) => {
+      if(res.confirm) {
+        Taro.showLoading()
+        await this.octo.removeFile(this.path, img)
+        Taro.hideLoading()
+        Taro.atMessage({
+          message: '删除成功',
+          type: 'success'
+        })
+        this.getImage()
+      }
+    })
   }
   componentWillMount() {}
 
@@ -302,11 +379,25 @@ class Index extends Component<Props, State> {
               return <Dir key={d} name={each} sha={d} onEnter={this.enterDir} />
             })}
             {images.map(each => (
-              <MyImage sha={each.sha} imgUrl={each.url} key={each.sha} />
+              <View
+                className='image-wrapper'
+                style={{ position: 'relative' }}
+                key={each.sha}>
+                <MyImage
+                  sha={each.sha}
+                  url={each.url}
+                  type={getImageType(each.name)}
+                />
+                <View
+                  className='image-delete'
+                  onClick={() => this.onDelete(each)}>
+                  <AtIcon value='trash' size='22' color='#fff' />
+                </View>
+              </View>
             ))}
           </View>
         </View>
-        <AtButton onClick={this.chooseImage}>上传</AtButton>
+        <AtButton onClick={this.onChooseImage}>上传</AtButton>
         <AtModal isOpened={show}>
           <AtModalHeader>新建目录</AtModalHeader>
           <AtModalContent>

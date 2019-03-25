@@ -36,6 +36,10 @@ class Cache {
   addImg(path: string, img: ImgType) {
     this.path[path].images.push(img)
   }
+  delImg(path: string, img: ImgType) {
+    const cac = this.path[path]
+    cac.images = cac.images.filter(each => each.sha !== img.sha)
+  }
   get(path: string) {
     const ret = this.path[path]
     return ret
@@ -130,12 +134,13 @@ export class Octo {
     }
     throw d
   }
-  removeFile(path, img: ImgType) {
-    return this.octokit.deleteFile({
+  async removeFile(path, img: ImgType) {
+    await this.octokit.deleteFile({
       path: join(path, img.name),
       message: `Deleted ${img.name} by PicGo - ${getNow()}`,
       sha: img.sha
     })
+    cache.delImg(path, img)
   }
   getUser() {
     return this.octokit.getUser()

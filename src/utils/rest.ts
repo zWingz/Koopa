@@ -141,7 +141,7 @@ class Rest {
     const url = `/repos/${this.repo}/contents/${path}`
     return this.request({
       url,
-      method: 'PUT',
+      method: 'DELETE',
       data: {
         message,
         sha

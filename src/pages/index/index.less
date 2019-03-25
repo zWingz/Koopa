@@ -79,24 +79,33 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    my-image,
-    dir {
-      margin-bottom: 10px;
-      overflow: hidden;
-      width: @width;
-      height: @width;
-      &:nth-child(3n + 1) {
-        margin-right: 10px;
-      }
-      &:nth-child(3n + 2) {
-        margin-right: 10px;
-      }
+  }
+  &-wrapper,
+  &-inner dir {
+    margin-bottom: 10px;
+    overflow: hidden;
+    width: @width;
+    height: @width;
+    &:nth-child(3n + 1) {
+      margin-right: 10px;
+    }
+    &:nth-child(3n + 2) {
+      margin-right: 10px;
     }
   }
   &-item {
     width: @width;
     height: @width;
     box-sizing: border-box;
+  }
+  &-delete {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    padding: 10px 0px;
+    bottom: 0px;
+    background: rgba(0,0,0,.5);
+    text-align: center;
   }
 }
 
