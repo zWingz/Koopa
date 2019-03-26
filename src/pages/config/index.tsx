@@ -17,13 +17,13 @@ class ConfigPage extends Component<Prop> {
     token: '',
     repo: '',
     branch: '',
-    customUrl: '',
+    // customUrl: '',
     isPrivate: false
   }
   constructor(p: Prop) {
     super(p)
-    const { token, repo, branch, customUrl, isPrivate } = p.ConfigStore
-    this.setState({ token, repo, branch, customUrl, isPrivate })
+    const { token, repo, branch, isPrivate } = p.ConfigStore
+    this.setState({ token, repo, branch, isPrivate })
   }
   handleChange = (key, value) => {
     this.setState({
@@ -35,7 +35,7 @@ class ConfigPage extends Component<Prop> {
     setStorageSync('config', this.state)
   }
   render() {
-    const { repo, token, branch, customUrl } = this.state
+    const { repo, token, branch } = this.state
     return (
       <View className='config-container'>
         <AtInput
@@ -62,14 +62,14 @@ class ConfigPage extends Component<Prop> {
           value={branch}
           onChange={value => this.handleChange('branch', value)}
         />
-        <AtInput
+        {/* <AtInput
           name='customUrl'
           title='自定义域名'
           type='text'
           placeholder='customUrl'
           value={customUrl}
           onChange={value => this.handleChange('customUrl', value)}
-        />
+        /> */}
         <AtSwitch
           title='是否私有'
           checked={this.state.isPrivate}

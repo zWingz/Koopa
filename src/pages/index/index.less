@@ -18,9 +18,13 @@
     height: 80px;
     border-radius: 50%;
     margin-right: 15px;
+    background: #ddd;
   }
   at-button {
     height: 30px;
+    &:first-of-type {
+      margin-right: 20px;
+    }
   }
 }
 
@@ -39,12 +43,13 @@
     margin: 10px 10px;
   }
   &-item {
-    padding: 0 5px;
-    font-size: 28px;
-    &::after {
-      content: '/';
-      margin-left: 5px;
-    }
+    padding: 0 4px;
+    font-size: 30px;
+    // max-width: 80px;
+    max-width: 120px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .repo-name {
     color: #ccccccb2;
@@ -56,12 +61,20 @@
   height: 100%;
   box-sizing: border-box;
   border: 1px solid #ddd;
+  padding-bottom: 10px;
   image {
     width: 149px;
     height: 128px;
   }
   &-name {
     font-size: 30px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    // height: 50px;
+    // line-height: 50px;
+    flex-shrink: 0;
   }
 }
 

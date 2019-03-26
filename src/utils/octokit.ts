@@ -26,6 +26,12 @@ const DEFAULT_DATA_JSON: DataJsonType = {
   images: []
 }
 
+/**
+ * 缓存
+ * 主要来存储访问过的tree, 避免重复获取数据
+ *
+ * @class Cache
+ */
 class Cache {
   path: {
     [k: string]: DataJsonType
@@ -45,7 +51,7 @@ class Cache {
     return ret
   }
 }
-export const cache = new Cache()
+const cache = new Cache()
 
 const ImageRegExg = /\.(jpg|jpeg|png)$/
 
@@ -54,11 +60,11 @@ export class Octo {
   repo: string = ''
   branch: string = ''
   customUrl: string = ''
-  octokit: Rest
+  api: Rest
   constructor({ repo, branch, token, customUrl = '' }: Config) {
     const [owner, r] = repo.split('/')
     if (!r) throw new Error('Error in repo name')
-    this.octokit = new Rest({
+    this.api = new Rest({
       token,
       repo,
       branch
@@ -69,7 +75,7 @@ export class Octo {
     this.customUrl = customUrl
   }
   getRootPath(): Promise<{ path: string; sha: string }[]> {
-    return this.octokit.getTree(this.branch)
+    return this.api.getTree(this.branch)
   }
   async getTree(
     pathName: string = '',
@@ -84,7 +90,7 @@ export class Octo {
       images: []
     }
     if (pathSha) {
-      const data = await this.octokit.getTree(pathSha)
+      const data = await this.api.getTree(pathSha)
       const dir = {}
       const images = []
       data.forEach(each => {
@@ -115,7 +121,7 @@ export class Octo {
 
   async uploadImage(path: string, img: UploadImageType) {
     const { filename } = img
-    const d = await this.octokit.createFile({
+    const d = await this.api.createFile({
       path: join(path, filename),
       message: `Upload ${filename} by picGo - ${getNow()}`,
       content: img.base64
@@ -135,7 +141,7 @@ export class Octo {
     throw d
   }
   async removeFile(path, img: ImgType) {
-    await this.octokit.deleteFile({
+    await this.api.deleteFile({
       path: join(path, img.name),
       message: `Deleted ${img.name} by PicGo - ${getNow()}`,
       sha: img.sha
@@ -143,7 +149,7 @@ export class Octo {
     cache.delImg(path, img)
   }
   getUser() {
-    return this.octokit.getUser()
+    return this.api.getUser()
   }
   parseUrl(path, fileName) {
     const { owner, repo, customUrl, branch } = this

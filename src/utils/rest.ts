@@ -24,6 +24,21 @@ class Rest {
     }
     this.branch = branch
   }
+  /**
+   * 封装github api
+   *
+   * @param {{
+   *     url?: string
+   *     data?: any
+   *     method?: Methdos
+   *   }} [{
+   *     url = '',
+   *     data = {},
+   *     method = 'GET'
+   *   }={}]
+   * @returns
+   * @memberof Rest
+   */
   request({
     url = '',
     data = {},
@@ -38,13 +53,22 @@ class Rest {
       header: this.headers,
       method,
       data
-    }).then(({ data }) => {
+    }).then(res => {
+      const { statusCode, data } = res
+      if (statusCode === 401) {
+        throw new Error('Token验证出错了!')
+      } else if (statusCode !== 200) {
+        throw new Error(data.message)
+      }
       return data
     })
   }
-  test() {
-    return this.request()
-  }
+  /**
+   * 获取用户信息接口
+   *
+   * @returns
+   * @memberof Rest
+   */
   getUser() {
     const url = 'user'
     return this.request({ url }).then(d => {
@@ -55,10 +79,29 @@ class Rest {
       }
     })
   }
-  getTree(sha: string): Promise<{ path: string; sha: string, type: string }[]> {
+  /**
+   * 获取tree接口
+   *
+   * @param {string} sha
+   * @returns {Promise<{ path: string; sha: string; type: string }[]>}
+   * @memberof Rest
+   */
+  getTree(sha: string): Promise<{ path: string; sha: string; type: string }[]> {
     const url = `/repos/${this.repo}/git/trees/${sha}`
     return this.request({ url }).then(d => d.tree)
   }
+  /**
+   * 获取文件blob接口
+   *
+   * @param {string} sha
+   * @returns {Promise<{
+   *     content: string
+   *     encoding: string
+   *     sha: string
+   *     size: number
+   *   }>}
+   * @memberof Rest
+   */
   getBlob(
     sha: string
   ): Promise<{
@@ -70,6 +113,21 @@ class Rest {
     const url = `/repos/${this.repo}/git/blobs/${sha}`
     return this.request({ url })
   }
+  /**
+   * 创建文件接口
+   *
+   * @param {{
+   *     path: string
+   *     content: string
+   *     message: string
+   *   }} {
+   *     path,
+   *     content,
+   *     message
+   *   }
+   * @returns {Promise<FileResponseType>}
+   * @memberof Rest
+   */
   createFile({
     path,
     content,
@@ -98,37 +156,22 @@ class Rest {
       }
     })
   }
-  // updateFile({
-  //   path,
-  //   content,
-  //   message,
-  //   sha
-  // }: {
-  //   path: string
-  //   content: string
-  //   message: string
-  //   sha: string
-  // }): Promise<FileResponseType> {
-  //   const url = `/repos/${this.repo}/contents/${path}`
-  //   return this.request({
-  //     url,
-  //     method: 'PUT',
-  //     data: {
-  //       content,
-  //       message,
-  //       sha
-  //     }
-  //   }).then(r => {
-  //     const {
-  //       content: { name, path, sha }
-  //     } = r
-  //     return {
-  //       name,
-  //       path,
-  //       sha
-  //     }
-  //   })
-  // }
+
+  /**
+   * 删除文件接口
+   *
+   * @param {{
+   *     path: string
+   *     message: string
+   *     sha: string
+   *   }} {
+   *     path,
+   *     message,
+   *     sha
+   *   }
+   * @returns
+   * @memberof Rest
+   */
   deleteFile({
     path,
     message,

@@ -21,6 +21,7 @@ import {
 } from 'taro-ui'
 import { wxReadFile } from '../../utils/wx'
 import MyImage from '../../components/Image'
+import Path from './Path'
 import Dir from './Dir'
 import '../../image/folder.png'
 // import '../../components/LoadImage'
@@ -41,6 +42,7 @@ type State = {
   error: string
   modalShow: boolean
   newPathName: string
+  edit: boolean
 }
 
 const CONFIG_ERROR_MSG = '配置不正确，请修改后重试'
@@ -69,7 +71,8 @@ class Index extends Component<Props, State> {
     error: ConfigStore.valid ? '' : CONFIG_ERROR_MSG,
     loading: true,
     modalShow: false,
-    newPathName: ''
+    newPathName: '',
+    edit: false
   }
   octo: Octo = null
 
@@ -144,8 +147,10 @@ class Index extends Component<Props, State> {
    */
   async getData() {
     if (this.octo) {
-      await this.getUser()
-      await this.getImage()
+      try {
+        await this.getUser()
+        await this.getImage()
+      } catch(e) {}
     }
   }
   /**
@@ -188,8 +193,10 @@ class Index extends Component<Props, State> {
       })
     } catch (e) {
       this.setState({
-        error: 'Token似乎失效了！'
+        error: e.message,
+        loading: false
       })
+      throw e
     }
   }
   /**
@@ -247,12 +254,13 @@ class Index extends Component<Props, State> {
       return
     }
     this.octo.createPath(this.path, newPathName)
-    this.setState({
-      dir: {
-        ...dir,
-        [newPathName]: ''
-      }
-    })
+    // this.setState({
+    //   dir: {
+    //     ...dir,
+    //     [newPathName]: ''
+    //   }
+    // })
+    this.enterDir(newPathName)
     this.hideModal()
   }
   /**
@@ -295,12 +303,27 @@ class Index extends Component<Props, State> {
       }
     )
   }
+  /**
+   * 切换编辑模式
+   *
+   * @memberof Index
+   */
+  toggleEdit = () => {
+    this.setState({
+      edit: !this.state.edit
+    })
+  }
+  /**
+   * 删除图片
+   *
+   * @memberof Index
+   */
   onDelete = (img: ImgType) => {
     Taro.showModal({
       title: '操作提示',
-      content: '确定要删除吗?',
-    }).then(async (res) => {
-      if(res.confirm) {
+      content: '确定要删除吗?'
+    }).then(async res => {
+      if (res.confirm) {
         Taro.showLoading()
         await this.octo.removeFile(this.path, img)
         Taro.hideLoading()
@@ -338,7 +361,8 @@ class Index extends Component<Props, State> {
       loading,
       dir,
       modalShow: show,
-      newPathName: newPath
+      newPathName: newPath,
+      edit
     } = this.state
     const DirKeys = Object.keys(dir)
     return !error ? (
@@ -346,29 +370,14 @@ class Index extends Component<Props, State> {
         <View className='user'>
           <Image className='avatar' mode='aspectFill' src={user.avatar} />
           <View className='username flex-grow'>{owner}</View>
-          <AtButton
-            type='secondary'
-            size='small'
-            className='path-create'
-            onClick={this.showModal}>
+          <AtButton type='secondary' size='small' onClick={this.showModal}>
             新建目录
           </AtButton>
+          <AtButton type='secondary' size='small' onClick={this.toggleEdit}>
+            删除图片
+          </AtButton>
         </View>
-        <View className='path-wrapper'>
-          <View
-            className='path-item repo-name'
-            onClick={() => this.backDir('')}>
-            {repoName}
-          </View>
-          {path.map(each => (
-            <View
-              key={each}
-              className='path-item'
-              onClick={() => this.backDir(each)}>
-              {each}
-            </View>
-          ))}
-        </View>
+        <Path repoName={repoName} path={path} onBack={this.backDir}></Path>
         <View className='image-container flex-grow'>
           {loading && (
             <AtActivityIndicator mode='center' content='Loading...' />
@@ -388,11 +397,13 @@ class Index extends Component<Props, State> {
                   url={each.url}
                   type={getImageType(each.name)}
                 />
-                <View
-                  className='image-delete'
-                  onClick={() => this.onDelete(each)}>
-                  <AtIcon value='trash' size='22' color='#fff' />
-                </View>
+                {edit && (
+                  <View
+                    className='image-delete'
+                    onClick={() => this.onDelete(each)}>
+                    <AtIcon value='trash' size='22' color='#fff' />
+                  </View>
+                )}
               </View>
             ))}
           </View>
@@ -409,8 +420,9 @@ class Index extends Component<Props, State> {
             />
             <View className='tips'>
               <View>提示:</View>
-              <View>1. 只有上传了图片后目录才生效</View>
-              <View>2. 目录生效后无法修改名称</View>
+              <View>1. 上传了图片后文件夹才生效</View>
+              <View>2. 无法修改文件夹名称</View>
+              <View>3. 若文件夹无图片, 则自动删除</View>
             </View>
           </AtModalContent>
           <AtModalAction>
