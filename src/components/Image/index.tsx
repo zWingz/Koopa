@@ -23,12 +23,6 @@ export default class MyImage extends Component<{
       loaded: true
     })
   }
-  componentDidMount() {
-    console.log('onMound', this.props.sha);
-  }
-  componentWillUnmount() {
-    console.log('unMount', this.props.sha);
-  }
   render() {
     const { url, sha, type } = this.props
     return ConfigStore.isPrivate ? (
