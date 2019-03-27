@@ -29,7 +29,8 @@ class App extends Component {
   config: Config = {
     pages: [
       'pages/index/index',
-      'pages/config/index'
+      'pages/config/index',
+      'pages/document/index'
     ],
     tabBar: {
       selectedColor: '#d4237a',

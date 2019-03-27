@@ -1,6 +1,11 @@
+page {
+  height: 100vh;
+  overflow: hidden;
+}
+
 .index {
   height: 100vh;
-  padding: 0 30px 20px;
+  padding: 0 30px 10px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -38,13 +43,13 @@
 .path {
   &-wrapper {
     flex-shrink: 0;
+    font-size: 32px;
     display: flex;
     padding: 5px 0px;
     margin: 10px 10px;
   }
   &-item {
     padding: 0 4px;
-    font-size: 30px;
     // max-width: 80px;
     max-width: 120px;
     overflow: hidden;
@@ -87,6 +92,8 @@
     flex-grow: 1;
     overflow: auto;
     flex-direction: column;
+    margin-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
   }
   &-inner {
     display: flex;

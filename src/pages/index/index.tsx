@@ -61,7 +61,8 @@ class Index extends Component<Props, State> {
    * 提示和声明 navigationBarTextStyle: 'black' | 'white' 类型冲突, 需要显示声明类型
    */
   config: Config = {
-    navigationBarTitleText: '首页'
+    navigationBarTitleText: '首页',
+    disableScroll: true
   }
   state: State = {
     pathArr: [],
@@ -163,7 +164,7 @@ class Index extends Component<Props, State> {
     if (!this.state.loading) {
       this.setState({ loading: true, images: [], dir: {} })
     }
-    setTimeout(async () => {
+    // setTimeout(async () => {
       try {
         const dataJson = await this.octo.getTree(this.path, sha)
         const { images, dir } = dataJson
@@ -180,7 +181,7 @@ class Index extends Component<Props, State> {
         })
         Taro.hideLoading()
       }
-    })
+    // })
   }
   /**
    * 获取用户信息

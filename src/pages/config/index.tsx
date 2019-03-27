@@ -1,6 +1,6 @@
 import { ComponentType } from 'react'
 import Taro, { Component, setStorageSync } from '@tarojs/taro'
-import { View } from '@tarojs/components'
+import { View, Navigator } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
 import './index.less'
 import ConfigStore from '../../store/config'
@@ -16,14 +16,14 @@ class ConfigPage extends Component<Prop> {
   state = {
     token: '',
     repo: '',
-    branch: '',
+    // branch: '',
     // customUrl: '',
     isPrivate: false
   }
   constructor(p: Prop) {
     super(p)
-    const { token, repo, branch, isPrivate } = p.ConfigStore
-    this.setState({ token, repo, branch, isPrivate })
+    const { token, repo, isPrivate } = p.ConfigStore
+    this.setState({ token, repo, isPrivate })
   }
   handleChange = (key, value) => {
     this.setState({
@@ -35,14 +35,14 @@ class ConfigPage extends Component<Prop> {
     setStorageSync('config', this.state)
   }
   render() {
-    const { repo, token, branch } = this.state
+    const { repo, token } = this.state
     return (
       <View className='config-container'>
         <AtInput
           name='repo'
           title='仓库名'
           type='text'
-          placeholder='owner/repo'
+          placeholder='username/repository'
           value={repo}
           onChange={value => this.handleChange('repo', value)}
         />
@@ -54,14 +54,14 @@ class ConfigPage extends Component<Prop> {
           value={token}
           onChange={value => this.handleChange('token', value)}
         />
-        <AtInput
+        {/* <AtInput
           name='branch'
           title='分支'
           type='text'
           placeholder='所属分支'
           value={branch}
           onChange={value => this.handleChange('branch', value)}
-        />
+        /> */}
         {/* <AtInput
           name='customUrl'
           title='自定义域名'
@@ -80,6 +80,7 @@ class ConfigPage extends Component<Prop> {
             保存
           </AtButton>
         </View>
+        <Navigator className='to-document' url='/pages/document/index'>查看相关说明</Navigator>
       </View>
     )
   }
