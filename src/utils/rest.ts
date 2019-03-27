@@ -57,7 +57,7 @@ class Rest {
       const { statusCode, data } = res
       if (statusCode === 401) {
         throw new Error('Token验证出错了!')
-      } else if (statusCode !== 200) {
+      } else if (statusCode >= 300) {
         throw new Error(data.message)
       }
       return data

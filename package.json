@@ -5,8 +5,8 @@
   "description": "小程序图片库",
   "main": "index.js",
   "scripts": {
-    "build:weapp": "taro build --type weapp",
-    "dev": "npm run build:weapp -- --watch"
+    "build": "taro build --type weapp",
+    "dev": "npm run build -- --watch"
   },
   "author": "",
   "license": "MIT",

@@ -150,7 +150,7 @@ class Index extends Component<Props, State> {
       try {
         await this.getUser()
         await this.getImage()
-      } catch(e) {}
+      } catch (e) {}
     }
   }
   /**
@@ -163,22 +163,24 @@ class Index extends Component<Props, State> {
     if (!this.state.loading) {
       this.setState({ loading: true, images: [], dir: {} })
     }
-    try {
-      const dataJson = await this.octo.getTree(this.path, sha)
-      const { images, dir } = dataJson
-      this.setState({
-        images: images.map(each => this.parse(each)),
-        dir: { ...dir },
-        loading: false
-      })
-      Taro.hideLoading()
-    } catch (e) {
-      this.setState({
-        error: e.message,
-        loading: false
-      })
-      Taro.hideLoading()
-    }
+    setTimeout(async () => {
+      try {
+        const dataJson = await this.octo.getTree(this.path, sha)
+        const { images, dir } = dataJson
+        this.setState({
+          images: images.map(each => this.parse(each)),
+          dir: { ...dir },
+          loading: false
+        })
+        Taro.hideLoading()
+      } catch (e) {
+        this.setState({
+          error: e.message,
+          loading: false
+        })
+        Taro.hideLoading()
+      }
+    })
   }
   /**
    * 获取用户信息
@@ -226,11 +228,16 @@ class Index extends Component<Props, State> {
   }
   uploadImg = async filePath => {
     const ext = filePath.split('.').pop()
+    Taro.showLoading({
+      title: '上传中...',
+      mask: true
+    })
     const content = await wxReadFile(filePath)
     await this.octo.uploadImage(this.path, {
       filename: `${new Date().getTime()}.${ext}`,
       base64: content
     })
+    Taro.hideLoading()
     this.getImage()
   }
   showModal = () => {
@@ -377,7 +384,7 @@ class Index extends Component<Props, State> {
             删除图片
           </AtButton>
         </View>
-        <Path repoName={repoName} path={path} onBack={this.backDir}></Path>
+        <Path repoName={repoName} path={path} onBack={this.backDir} />
         <View className='image-container flex-grow'>
           {loading && (
             <AtActivityIndicator mode='center' content='Loading...' />
