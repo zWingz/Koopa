@@ -1,4 +1,4 @@
-## Koopa 基于github的小程序图片管理
+## Koopa
 
 ### 操作步骤
 
