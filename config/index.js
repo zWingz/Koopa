@@ -1,5 +1,5 @@
 const config = {
-  projectName: 'github-gallery',
+  projectName: 'koopa',
   date: '2019-3-8',
   designWidth: 750,
   deviceRatio: {

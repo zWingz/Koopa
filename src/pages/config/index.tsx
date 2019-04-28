@@ -33,6 +33,9 @@ class ConfigPage extends Component<Prop> {
   save = () => {
     this.props.ConfigStore.setConfig(this.state)
     setStorageSync('config', this.state)
+    Taro.showToast({
+      title: '保存成功!'
+    })
   }
   render() {
     const { repo, token } = this.state

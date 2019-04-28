@@ -50,6 +50,9 @@ class Cache {
     const ret = this.path[path]
     return ret
   }
+  clear() {
+    this.path = {}
+  }
 }
 const cache = new Cache()
 
@@ -164,6 +167,9 @@ export class Octo {
       path,
       fileName
     )
+  }
+  clearCache() {
+    cache.clear()
   }
 }
 

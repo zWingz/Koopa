@@ -5,7 +5,6 @@ import { observer, inject } from '@tarojs/mobx'
 import { getIns, Octo, clearIns, DirType } from '../../utils/octokit'
 import join from 'url-join'
 import './index.less'
-import { ImgType } from 'src/utils/interface'
 import ConfigStore from '../../store/config'
 import { autorun } from 'mobx'
 import {
@@ -20,10 +19,10 @@ import {
   AtMessage
 } from 'taro-ui'
 import { wxReadFile } from '../../utils/wx'
+import { ImgType } from '../../utils/interface'
 import MyImage from '../../components/Image'
 import Path from './Path'
 import Dir from './Dir'
-import '../../image/folder.png'
 // import '../../components/LoadImage'
 
 type Props = {
@@ -149,6 +148,7 @@ class Index extends Component<Props, State> {
   async getData() {
     if (this.octo) {
       try {
+        this.octo.clearCache()
         await this.getUser()
         await this.getImage()
       } catch (e) {}
@@ -164,24 +164,22 @@ class Index extends Component<Props, State> {
     if (!this.state.loading) {
       this.setState({ loading: true, images: [], dir: {} })
     }
-    // setTimeout(async () => {
-      try {
-        const dataJson = await this.octo.getTree(this.path, sha)
-        const { images, dir } = dataJson
-        this.setState({
-          images: images.map(each => this.parse(each)),
-          dir: { ...dir },
-          loading: false
-        })
-        Taro.hideLoading()
-      } catch (e) {
-        this.setState({
-          error: e.message,
-          loading: false
-        })
-        Taro.hideLoading()
-      }
-    // })
+    try {
+      const dataJson = await this.octo.getTree(this.path, sha)
+      const { images, dir } = dataJson
+      this.setState({
+        images: images.map(each => this.parse(each)),
+        dir: { ...dir },
+        loading: false
+      })
+      Taro.hideLoading()
+    } catch (e) {
+      this.setState({
+        error: e.message,
+        loading: false
+      })
+      Taro.hideLoading()
+    }
   }
   /**
    * 获取用户信息
@@ -343,6 +341,12 @@ class Index extends Component<Props, State> {
       }
     })
   }
+  onPreview = (url: string) => {
+    Taro.previewImage({
+      urls: this.state.images.map(each => each.url),
+      current: url
+    })
+  }
   componentWillMount() {}
 
   componentWillReact() {}
@@ -376,7 +380,11 @@ class Index extends Component<Props, State> {
     return !error ? (
       <View className='index flex flex-column'>
         <View className='user'>
-          <Image className='avatar' mode='aspectFill' src={user.avatar} />
+          {user.avatar ? (
+            <Image className='avatar' mode='aspectFill' src={user.avatar} />
+          ) : (
+            <View className='avatar' />
+          )}
           <View className='username flex-grow'>{owner}</View>
           <AtButton type='secondary' size='small' onClick={this.showModal}>
             新建目录
@@ -403,6 +411,7 @@ class Index extends Component<Props, State> {
                 <MyImage
                   sha={each.sha}
                   url={each.url}
+                  onClick={this.onPreview}
                   type={getImageType(each.name)}
                 />
                 {edit && (

@@ -1,5 +1,5 @@
 import { observable, action, computed } from 'mobx'
-import { Config } from 'src/utils/interface';
+import { Config } from '../utils/interface';
 
 
 class ConfigStore {
