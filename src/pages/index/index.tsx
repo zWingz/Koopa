@@ -1,6 +1,6 @@
 import { ComponentType } from 'react'
 import Taro, { Component, Config, chooseImage } from '@tarojs/taro'
-import { View, Image, Button } from '@tarojs/components'
+import { View, Image, Button, Text } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
 import { getIns, Octo, clearIns, DirType } from '../../utils/octokit'
 import join from 'url-join'
@@ -23,7 +23,7 @@ import { ImgType } from '../../utils/interface'
 import MyImage from '../../components/Image'
 import Path from './Path'
 import Dir from './Dir'
-// import '../../components/LoadImage'
+import NoDataPng from '../../image/no-data.png'
 
 type Props = {
   ConfigStore: typeof ConfigStore
@@ -168,6 +168,7 @@ class Index extends Component<Props, State> {
       const dataJson = await this.octo.getTree(this.path, sha)
       const { images, dir } = dataJson
       this.setState({
+        // images: [],
         images: images.map(each => this.parse(each)),
         dir: { ...dir },
         loading: false
@@ -423,6 +424,12 @@ class Index extends Component<Props, State> {
                 )}
               </View>
             ))}
+            {
+              !loading && !images.length && <View className="no-data">
+                <Image src={NoDataPng} className='no-data-icon'/>
+                <Text className='no-data-text'>暂无图片</Text>
+              </View>
+            }
           </View>
         </View>
         <AtButton onClick={this.onChooseImage}>上传</AtButton>
