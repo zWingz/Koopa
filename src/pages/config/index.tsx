@@ -53,7 +53,7 @@ class ConfigPage extends Component<Prop> {
           name='token'
           title='Token'
           type='text'
-          placeholder='personal access token'
+          placeholder='access token'
           value={token}
           onChange={value => this.handleChange('token', value)}
         />
@@ -83,10 +83,15 @@ class ConfigPage extends Component<Prop> {
             保存
           </AtButton>
         </View>
-        <Navigator className='to-document' url='/pages/document/index'>查看相关说明</Navigator>
+        <Navigator className='to-document' url='/pages/document/index'>查看操作说明</Navigator>
+        <View className='about-tips'>
+          <View>注:</View>
+          <View>1、以上信息只保存在本地, 不通过服务器</View>
+          <View>2、图片会保存在用户个人建立的github仓库中</View>
+          <View>3、如不提供token，则只可查看图片</View>
+        </View>
       </View>
     )
   }
 }
-
 export default ConfigPage as ComponentType

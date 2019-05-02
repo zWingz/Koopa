@@ -14,15 +14,22 @@ class Rest {
   path = ''
   branch = 'master'
   url = 'https://api.github.com'
-  headers = {
-    Authorization: ''
-  }
+  // headers = {
+  //   Authorization: ''
+  // }
+  headers = {}
+  username = ''
+  token = ''
   constructor({ repo, token, branch }: RestConfig) {
     this.repo = repo
-    this.headers = {
-      Authorization: `token ${token}`
+    if(token) {
+      this.token = token
+      this.headers = {
+        Authorization: `token ${token}`
+      }
     }
     this.branch = branch
+    this.username = repo.split('/')[0]
   }
   /**
    * 封装github api
@@ -56,7 +63,7 @@ class Rest {
     }).then(res => {
       const { statusCode, data } = res
       if (statusCode === 401) {
-        throw new Error('Token验证出错了!')
+        throw new Error('Token验证出错了, 请修改后重试!')
       } else if (statusCode >= 300) {
         throw new Error(data.message)
       }
@@ -70,7 +77,7 @@ class Rest {
    * @memberof Rest
    */
   getUser() {
-    const url = 'user'
+    const url = this.token ? `user` : `users/${this.username}`
     return this.request({ url }).then(d => {
       const { login: username, avatar_url: avatar } = d
       return {

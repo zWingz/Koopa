@@ -8,11 +8,6 @@ class Document extends Component {
     return (
       <View>
         <View className='config-tips'>
-          <View>相关说明:</View>
-          <View>1、以上信息只保存在本地, 不通过服务器</View>
-          <View>2、图片会保存在用户个人建立的github仓库中</View>
-        </View>
-        <View className='config-tips'>
           <View>操作流程:</View>
           <View>
             1、在<Label>www.github.com</Label>注册账号

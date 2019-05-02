@@ -38,7 +38,7 @@ class ConfigStore {
   }
   @computed
   get valid() {
-    return this.owner && this.repoName && this.token
+    return this.owner && this.repoName
   }
 }
 

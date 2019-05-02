@@ -126,7 +126,7 @@ export class Octo {
     const { filename } = img
     const d = await this.api.createFile({
       path: join(path, filename),
-      message: `Upload ${filename} by picGo - ${getNow()}`,
+      message: `Upload ${filename} by Koopa - ${getNow()}`,
       content: img.base64
     })
     if (d) {
@@ -146,7 +146,7 @@ export class Octo {
   async removeFile(path, img: ImgType) {
     await this.api.deleteFile({
       path: join(path, img.name),
-      message: `Deleted ${img.name} by PicGo - ${getNow()}`,
+      message: `Deleted ${img.name} by Koopa - ${getNow()}`,
       sha: img.sha
     })
     cache.delImg(path, img)

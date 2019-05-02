@@ -1,6 +1,6 @@
 import { ComponentType } from 'react'
 import Taro, { Component, Config, chooseImage } from '@tarojs/taro'
-import { View, Image, Button, Text } from '@tarojs/components'
+import { View, Image, Button, Text, Block } from '@tarojs/components'
 import { observer, inject } from '@tarojs/mobx'
 import { getIns, Octo, clearIns, DirType } from '../../utils/octokit'
 import join from 'url-join'
@@ -151,7 +151,7 @@ class Index extends Component<Props, State> {
         this.octo.clearCache()
         await this.getUser()
         await this.getImage()
-      } catch (e) {}
+      } catch (e) { }
     }
   }
   /**
@@ -236,6 +236,12 @@ class Index extends Component<Props, State> {
     await this.octo.uploadImage(this.path, {
       filename: `${new Date().getTime()}.${ext}`,
       base64: content
+    }).catch (() => {
+      Taro.atMessage({
+        message: '上传失败，请检查token是否正确',
+        type: 'error',
+        duration: 2000
+      })
     })
     Taro.hideLoading()
     this.getImage()
@@ -331,14 +337,24 @@ class Index extends Component<Props, State> {
       content: '确定要删除吗?'
     }).then(async res => {
       if (res.confirm) {
-        Taro.showLoading()
-        await this.octo.removeFile(this.path, img)
-        Taro.hideLoading()
-        Taro.atMessage({
-          message: '删除成功',
-          type: 'success'
+        Taro.showLoading({
+          mask: true
         })
-        this.getImage()
+        try {
+          await this.octo.removeFile(this.path, img)
+          Taro.atMessage({
+            message: '删除成功',
+            type: 'success'
+          })
+          this.getImage()
+        } catch (e) {
+          Taro.atMessage({
+            message: '出错了，请检查token配置是否正确',
+            type: 'error',
+            duration: 2000
+          })
+        }
+        Taro.hideLoading()
       }
     })
   }
@@ -365,7 +381,7 @@ class Index extends Component<Props, State> {
   componentDidHide() {}
 
   render() {
-    const { owner, repoName } = ConfigStore
+    const { owner, repoName, token } = ConfigStore
     const {
       images,
       pathArr: path,
@@ -384,15 +400,19 @@ class Index extends Component<Props, State> {
           {user.avatar ? (
             <Image className='avatar' mode='aspectFill' src={user.avatar} />
           ) : (
-            <View className='avatar' />
-          )}
+              <View className='avatar' />
+            )}
           <View className='username flex-grow'>{owner}</View>
-          <AtButton type='secondary' size='small' onClick={this.showModal}>
-            新建目录
-          </AtButton>
-          <AtButton type='secondary' size='small' onClick={this.toggleEdit}>
-            删除图片
-          </AtButton>
+          {
+            token && <Block>
+              <AtButton type='secondary' size='small' onClick={this.showModal}>
+                新建目录
+              </AtButton>
+              <AtButton type='secondary' size='small' onClick={this.toggleEdit}>
+                删除图片
+              </AtButton>
+            </Block>
+          }
         </View>
         <Path repoName={repoName} path={path} onBack={this.backDir} />
         <View className='image-container flex-grow'>
@@ -432,7 +452,9 @@ class Index extends Component<Props, State> {
             }
           </View>
         </View>
-        <AtButton onClick={this.onChooseImage}>上传</AtButton>
+        {
+          token && <AtButton onClick={this.onChooseImage}>上传图片</AtButton>
+        }
         <AtModal isOpened={show}>
           <AtModalHeader>新建目录</AtModalHeader>
           <AtModalContent>
@@ -459,14 +481,14 @@ class Index extends Component<Props, State> {
         <AtMessage />
       </View>
     ) : (
-      <View className='empty-container flex-center flex-column'>
-        <AtIcon value='close-circle' size={64} />
-        <View>{error}</View>
-        <AtButton type='primary' onClick={this.switchToSetting}>
-          去设置
+        <View className='empty-container flex-center flex-column'>
+          <AtIcon value='close-circle' size={64} />
+          <View>{error}</View>
+          <AtButton type='primary' onClick={this.switchToSetting}>
+            去设置
         </AtButton>
-      </View>
-    )
+        </View>
+      )
   }
 }
 
