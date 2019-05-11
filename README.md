@@ -1,5 +1,9 @@
 ## Koopa
 
+> 仅供学习参考
+
+基于`github`的图片管理小程序
+
 ### 操作步骤
 
 #### github 端操作
@@ -40,3 +44,15 @@ github 仓库分为公有和私有
 
 - 目前只能一次上传/删除一张图片
 - 如果文件夹下没有`图片`/`子文件夹`,该文件夹也会被删除,即不存在空文件夹
+
+### Demo
+
+![](./example/1.jpeg)
+![](./example/2.jpeg)
+![](./example/3.jpeg)
+![](./example/4.jpeg)
+
+
+### Related
+
+- [在小程序中使用base64展示图片](https://zwing.site/posts/434058564.html)
