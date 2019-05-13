@@ -48,11 +48,11 @@ github 仓库分为公有和私有
 - 如果文件夹下没有`图片`/`子文件夹`,该文件夹也会被删除,即不存在空文件夹
 
 ### Example
-<!-- 
+
 ![](./example/1.jpeg)
 ![](./example/2.jpeg)
 ![](./example/3.jpeg)
-![](./example/4.jpeg) -->
+![](./example/4.jpeg)
 
 
 ### Related
